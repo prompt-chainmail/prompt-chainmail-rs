@@ -1,0 +1,28 @@
+[package]
+name = "prompt-chainmail"
+version = "0.1.0"
+edition = "2021"
+license = "BUSL-1.1"
+description = "Security middleware that shields AI applications from prompt injection through composable defense layers."
+repository = "https://github.com/prompt-chainmail/prompt-chainmail-rs"
+
+[features]
+default = ["classifier", "parallel"]
+classifier = ["dep:ort", "dep:sha2"]
+http = ["dep:ureq"]
+parallel = ["classifier", "dep:rayon"]
+
+[dependencies]
+regex = "1.13.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+unicode-normalization = "0.1.25"
+uuid = { version = "1.24.0", features = ["v4"] }
+whatlang = "0.18.0"
+ort = { version = "2.0.0-rc.13", optional = true }
+sha2 = { version = "0.11.0", optional = true }
+ureq = { version = "3", optional = true, features = ["json"] }
+rayon = { version = "1.12.0", optional = true }
+
+[dev-dependencies]
+regex = "1.13.1"
