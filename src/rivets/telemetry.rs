@@ -183,7 +183,7 @@ impl Rivet for TelemetryRivet {
         if let Some(provider) = &self.provider {
             let mut data = HashMap::new();
             data.insert(
-                "sessionId".to_string(),
+                "session_id".to_string(),
                 Value::String(context.session_id.clone()),
             );
             data.insert(
