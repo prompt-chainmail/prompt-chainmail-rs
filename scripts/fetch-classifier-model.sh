@@ -64,7 +64,7 @@ mkdir -p "$DEST"
 FILES=(
   classifier.onnx
   manifest.json
-  normalization-vectors.json
+  normalization_vectors.json
   model_version.json
   SHA256SUMS
 )
@@ -105,7 +105,7 @@ done
 EMBED_DIR="$ROOT/src/shared/classifier"
 cp "$DEST/classifier.onnx" "$EMBED_DIR/classifier.onnx"
 cp "$DEST/manifest.json" "$EMBED_DIR/manifest.json"
-cp "$DEST/normalization-vectors.json" "$EMBED_DIR/normalization-vectors.json"
+cp "$DEST/normalization_vectors.json" "$EMBED_DIR/normalization_vectors.json"
 
 echo "Classifier model $VERSION ready at $DEST"
 echo "Embedded weights refreshed at $EMBED_DIR/classifier.onnx"
