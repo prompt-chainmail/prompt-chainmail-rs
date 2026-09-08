@@ -9,7 +9,7 @@ mod instruction_hijacking;
 mod language_detection;
 mod logger;
 mod pattern_detection;
-mod rate_limit;
+mod rate_limit_filter;
 #[cfg(feature = "classifier")]
 mod role_confusion;
 mod sanitize;
@@ -19,6 +19,8 @@ mod telemetry;
 mod template_injection;
 #[cfg(feature = "classifier")]
 mod tool_use_hijacking;
+#[cfg(feature = "classifier")]
+mod side_channel;
 mod types;
 mod untrusted_wrapper;
 mod utils;
@@ -38,7 +40,7 @@ pub use instruction_hijacking::instruction_hijacking;
 pub use language_detection::language_detection;
 pub use logger::{logger, LogLevel};
 pub use pattern_detection::pattern_detection;
-pub use rate_limit::rate_limit;
+pub use rate_limit_filter::rate_limit_filter;
 #[cfg(feature = "classifier")]
 pub use role_confusion::role_confusion;
 pub use sanitize::sanitize;
@@ -52,6 +54,8 @@ pub use telemetry::{
 pub use template_injection::template_injection;
 #[cfg(feature = "classifier")]
 pub use tool_use_hijacking::tool_use_hijacking;
+#[cfg(feature = "classifier")]
+pub use side_channel::side_channel;
 pub use types::{security_flags, ThreatLevel};
 pub use untrusted_wrapper::untrusted_wrapper;
 pub use utils::apply_threat_penalty;
@@ -113,13 +117,13 @@ impl Rivets {
         language_detection()
     }
 
-    pub fn rate_limit(
+    pub fn rate_limit_filter(
         max_requests: Option<usize>,
         window_ms: Option<u128>,
         key_fn: Option<Arc<dyn Fn(&ChainmailContext) -> String + Send + Sync>>,
         max_keys: Option<usize>,
     ) -> Arc<dyn Rivet> {
-        rate_limit(max_requests, window_ms, key_fn, max_keys)
+        rate_limit_filter(max_requests, window_ms, key_fn, max_keys)
     }
 
     pub fn logger(
@@ -185,6 +189,19 @@ impl Rivets {
         confidence_threshold: Option<f64>,
     ) -> Arc<dyn Rivet> {
         crate::rivets::tool_use_hijacking::tool_use_hijacking(
+            languages_limit,
+            languages_detection_threshold,
+            confidence_threshold,
+        )
+    }
+
+    #[cfg(feature = "classifier")]
+    pub fn side_channel(
+        languages_limit: Option<usize>,
+        languages_detection_threshold: Option<f64>,
+        confidence_threshold: Option<f64>,
+    ) -> Arc<dyn Rivet> {
+        crate::rivets::side_channel::side_channel(
             languages_limit,
             languages_detection_threshold,
             confidence_threshold,

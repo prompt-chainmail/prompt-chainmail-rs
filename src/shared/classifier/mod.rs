@@ -23,7 +23,7 @@ pub use combined::{
 };
 pub use labels::{
     labels_for_family, ClassifierFamily, CLASSIFIER_LABELS, INSTRUCTION_HIJACKING_LABELS,
-    ROLE_CONFUSION_LABELS, TOOL_USE_HIJACKING_LABELS,
+    ROLE_CONFUSION_LABELS, SIDE_CHANNEL_LABELS, TOOL_USE_HIJACKING_LABELS,
 };
 pub use manifest::{validate_manifest, CLASSIFIER_MANIFEST, EMBEDDED_MANIFEST_JSON};
 pub use normalize::{

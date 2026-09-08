@@ -153,13 +153,14 @@ fn advanced_for_bench() -> PromptChainmail {
         .forge(Rivets::delimiter_confusion())
         .forge(Rivets::instruction_hijacking(None, None, None))
         .forge(Rivets::tool_use_hijacking(None, None, None))
+        .forge(Rivets::side_channel(None, None, None))
         .forge(Rivets::code_injection())
         .forge(Rivets::sql_injection())
         .forge(Rivets::template_injection())
         .forge(Rivets::encoding_detection())
         .forge(Rivets::structure_analysis())
         .forge(Rivets::confidence_filter(0.6, None))
-        .forge(Rivets::rate_limit(Some(10_000_000), Some(60_000), None, None))
+        .forge(Rivets::rate_limit_filter(Some(10_000_000), Some(60_000), None, None))
 }
 
 fn selected_chains() -> Vec<(&'static str, PromptChainmail)> {

@@ -17,6 +17,11 @@ pub const ROLE_CONFUSION_LABELS: &[&str] = &[
 
 pub const TOOL_USE_HIJACKING_LABELS: &[&str] = &["tool_use_hijacking"];
 
+pub const SIDE_CHANNEL_LABELS: &[&str] = &[
+    "side_channel_coordination",
+    "side_channel_state_write",
+];
+
 /// Full label order matching `manifest.json` and the subtype output tensor.
 pub const CLASSIFIER_LABELS: &[&str] = &[
     "instruction_override",
@@ -29,6 +34,8 @@ pub const CLASSIFIER_LABELS: &[&str] = &[
     "permission_assertion",
     "role_indicator",
     "tool_use_hijacking",
+    "side_channel_coordination",
+    "side_channel_state_write",
 ];
 
 pub type ClassifierLabel = String;
@@ -39,6 +46,7 @@ pub enum ClassifierFamily {
     InstructionHijacking,
     RoleConfusion,
     ToolUseHijacking,
+    SideChannel,
 }
 
 impl ClassifierFamily {
@@ -47,6 +55,7 @@ impl ClassifierFamily {
             ClassifierFamily::InstructionHijacking => "instruction_hijacking",
             ClassifierFamily::RoleConfusion => "role_confusion",
             ClassifierFamily::ToolUseHijacking => "tool_use_hijacking",
+            ClassifierFamily::SideChannel => "side_channel",
         }
     }
 }
@@ -56,5 +65,6 @@ pub fn labels_for_family(family: ClassifierFamily) -> &'static [&'static str] {
         ClassifierFamily::InstructionHijacking => INSTRUCTION_HIJACKING_LABELS,
         ClassifierFamily::RoleConfusion => ROLE_CONFUSION_LABELS,
         ClassifierFamily::ToolUseHijacking => TOOL_USE_HIJACKING_LABELS,
+        ClassifierFamily::SideChannel => SIDE_CHANNEL_LABELS,
     }
 }

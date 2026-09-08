@@ -8,7 +8,7 @@ use crate::types::{ChainmailContext, ChainmailResult};
 
 type KeyFn = Arc<dyn Fn(&ChainmailContext) -> String + Send + Sync>;
 
-struct RateLimitRivet {
+struct RateLimitFilterRivet {
     max_requests: usize,
     window_ms: u128,
     key_fn: KeyFn,
@@ -16,9 +16,9 @@ struct RateLimitRivet {
     requests: Mutex<HashMap<String, Vec<u128>>>,
 }
 
-impl Rivet for RateLimitRivet {
+impl Rivet for RateLimitFilterRivet {
     fn name(&self) -> &'static str {
-        "rate_limit"
+        "rate_limit_filter"
     }
 
     fn process(
@@ -81,17 +81,18 @@ fn now_ms() -> u128 {
         .unwrap_or(0)
 }
 
-/// Rate-limits by key within a sliding time window.
+/// Quota filter. Sets `blocked` when the request cap is hit, not from leftover
+/// trust. Detectors do not set `blocked`.
 ///
 /// Defaults: `max_requests=100`, `window_ms=60000`, key `"global"`, `max_keys=1000`.
-pub fn rate_limit(
+pub fn rate_limit_filter(
     max_requests: Option<usize>,
     window_ms: Option<u128>,
     key_fn: Option<KeyFn>,
     max_keys: Option<usize>,
 ) -> Arc<dyn Rivet> {
     let key_fn = key_fn.unwrap_or_else(|| Arc::new(|_: &ChainmailContext| "global".to_string()));
-    Arc::new(RateLimitRivet {
+    Arc::new(RateLimitFilterRivet {
         max_requests: max_requests.unwrap_or(100),
         window_ms: window_ms.unwrap_or(60_000),
         key_fn,

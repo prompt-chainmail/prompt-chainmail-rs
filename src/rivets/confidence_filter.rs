@@ -31,10 +31,11 @@ impl Rivet for ConfidenceFilterRivet {
     }
 }
 
-/// Blocks requests based on confidence thresholds.
+/// Trust gate. Sets `blocked` from leftover confidence. Detectors only add
+/// flags and subtract trust; if this rivet is not forged, `blocked` stays false.
 ///
-/// When only `min_threshold` is provided, blocks content with confidence below
-/// the threshold. When both are provided, blocks content within the range.
+/// When only `min_threshold` is provided, blocks when confidence is strictly
+/// below the threshold. When both are provided, blocks content within the range.
 pub fn confidence_filter(min_threshold: f64, max_threshold: Option<f64>) -> Arc<dyn Rivet> {
     Arc::new(ConfidenceFilterRivet {
         min_threshold,

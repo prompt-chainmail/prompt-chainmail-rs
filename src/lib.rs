@@ -17,13 +17,13 @@ pub use rivets::{
     apply_threat_penalty, code_injection, condition, confidence_filter, create_console_provider,
     delimiter_confusion, encoding_detection, get_log_level_from_confidence,
     get_threat_level_from_confidence_score, http_fetch, language_detection, logger,
-    pattern_detection, rate_limit, sanitize, security_flags, sql_injection, structure_analysis,
+    pattern_detection, rate_limit_filter, sanitize, security_flags, sql_injection, structure_analysis,
     telemetry, template_injection, untrusted_wrapper, ConsoleTelemetryProvider, HttpFetchOptions,
     LogLevel, Rivet, Rivets, TelemetryData, TelemetryEvent, TelemetryEventType, TelemetryLogLevel,
     TelemetryOptions, TelemetryProvider, ThreatLevel, HTTP_FETCH_PRIVATE_RANGES,
 };
 #[cfg(feature = "classifier")]
-pub use rivets::{instruction_hijacking, role_confusion, tool_use_hijacking};
+pub use rivets::{instruction_hijacking, role_confusion, side_channel, tool_use_hijacking};
 #[cfg(feature = "classifier")]
 pub use shared::classifier;
 pub use shared::{

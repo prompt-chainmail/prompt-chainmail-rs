@@ -33,13 +33,14 @@ impl Chainmails {
             .forge(Rivets::delimiter_confusion())
             .forge(Rivets::instruction_hijacking(None, None, None))
             .forge(Rivets::tool_use_hijacking(None, None, None))
+            .forge(Rivets::side_channel(None, None, None))
             .forge(Rivets::code_injection())
             .forge(Rivets::sql_injection())
             .forge(Rivets::template_injection())
             .forge(Rivets::encoding_detection())
             .forge(Rivets::structure_analysis())
             .forge(Rivets::confidence_filter(confidence_filter, None))
-            .forge(Rivets::rate_limit(None, None, None, None))
+            .forge(Rivets::rate_limit_filter(None, None, None, None))
     }
 
     /// [`Self::advanced`] plus logging.
@@ -50,7 +51,7 @@ impl Chainmails {
     /// Stricter defaults for high-security environments.
     ///
     /// Defaults: `max_length = 8000`, `confidence_filter = 0.8`,
-    /// `rate_limit(50, 60000)`.
+    /// `rate_limit_filter(50, 60000)`.
     pub fn strict(max_length: Option<usize>, confidence_filter: Option<f64>) -> PromptChainmail {
         let max_length = max_length.or(Some(8000));
         let confidence_filter = confidence_filter.unwrap_or(0.8);
@@ -61,12 +62,13 @@ impl Chainmails {
             .forge(Rivets::delimiter_confusion())
             .forge(Rivets::instruction_hijacking(None, None, None))
             .forge(Rivets::tool_use_hijacking(None, None, None))
+            .forge(Rivets::side_channel(None, None, None))
             .forge(Rivets::code_injection())
             .forge(Rivets::sql_injection())
             .forge(Rivets::template_injection())
             .forge(Rivets::encoding_detection())
             .forge(Rivets::structure_analysis())
             .forge(Rivets::confidence_filter(confidence_filter, None))
-            .forge(Rivets::rate_limit(Some(50), Some(60_000), None, None))
+            .forge(Rivets::rate_limit_filter(Some(50), Some(60_000), None, None))
     }
 }

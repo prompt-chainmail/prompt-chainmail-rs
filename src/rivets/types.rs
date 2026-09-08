@@ -58,6 +58,10 @@ pub mod security_flags {
     pub const DELIMITER_CONFUSION: &str = "delimiter_confusion";
     pub const TOOL_USE_HIJACKING: &str = "tool_use_hijacking";
 
+    pub const SIDE_CHANNEL: &str = "side_channel";
+    pub const SIDE_CHANNEL_COORDINATION: &str = "side_channel_coordination";
+    pub const SIDE_CHANNEL_STATE_WRITE: &str = "side_channel_state_write";
+
     pub const ROLE_CONFUSION: &str = "role_confusion";
     pub const ROLE_CONFUSION_ROLE_ASSUMPTION: &str = "role_confusion_role_assumption";
     pub const ROLE_CONFUSION_MODE_SWITCHING: &str = "role_confusion_mode_switching";

@@ -1,4 +1,4 @@
-//! Ops rivets: rate_limit, condition, untrusted_wrapper, logger, telemetry, http_fetch.
+//! Ops rivets: rate_limit_filter, condition, untrusted_wrapper, logger, telemetry, http_fetch.
 
 use std::sync::{Arc, Mutex};
 
@@ -8,8 +8,9 @@ use prompt_chainmail::{
 };
 
 #[test]
-fn rate_limit_eventually_blocks() {
-    let mail = PromptChainmail::new().forge(Rivets::rate_limit(Some(2), Some(60_000), None, None));
+fn rate_limit_filter_eventually_blocks() {
+    let mail =
+        PromptChainmail::new().forge(Rivets::rate_limit_filter(Some(2), Some(60_000), None, None));
 
     let r1 = mail.protect("test 1");
     let r2 = mail.protect("test 2");

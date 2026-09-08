@@ -61,52 +61,67 @@ fi
 DEST="$ROOT/models/$VERSION"
 mkdir -p "$DEST"
 
-FILES=(
-  classifier.onnx
-  manifest.json
-  normalization_vectors.json
-  model_version.json
-  SHA256SUMS
-)
-
 fetch_one() {
   local filename="$1"
   local dest_path="$DEST/$filename"
+  local required="${2:-required}"
 
   if [[ -n "$MODELS_REPO" && -f "$MODELS_REPO/models/$VERSION/$filename" ]]; then
     local src="$MODELS_REPO/models/$VERSION/$filename"
     # Prefer hardlink/symlink for local checkouts; fall back to copy.
     if ln -sf "$src" "$dest_path" 2>/dev/null; then
       echo "linked $filename <- $src"
-      return
+      return 0
     fi
     cp "$src" "$dest_path"
     echo "copied $filename <- $src"
-    return
+    return 0
   fi
 
   local url="https://raw.githubusercontent.com/${GITHUB_OWNER_REPO}/${GITHUB_BRANCH}/models/${VERSION}/${filename}"
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$url" -o "$dest_path"
+    if curl -fsSL "$url" -o "$dest_path"; then
+      echo "downloaded $filename <- $url"
+      return 0
+    fi
   elif command -v wget >/dev/null 2>&1; then
-    wget -qO "$dest_path" "$url"
+    if wget -qO "$dest_path" "$url"; then
+      echo "downloaded $filename <- $url"
+      return 0
+    fi
   else
     echo "Need curl or wget to download $url" >&2
     exit 1
   fi
-  echo "downloaded $filename <- $url"
+  rm -f "$dest_path"
+  if [[ "$required" == "required" ]]; then
+    echo "Failed to fetch required file $filename" >&2
+    exit 1
+  fi
+  echo "skipped optional $filename"
+  return 0
 }
 
-for f in "${FILES[@]}"; do
-  fetch_one "$f"
-done
+fetch_one "model_version.json"
+fetch_one "manifest.json"
+fetch_one "normalization_vectors.json"
+fetch_one "SHA256SUMS" optional
+fetch_one "classifier.onnx" optional
+fetch_one "classifier.int8.onnx" optional
+
+MODEL_FILE="$(python3 -c "import json; print(json.load(open('$DEST/model_version.json'))['model_filename'])")"
+if [[ ! -f "$DEST/$MODEL_FILE" ]]; then
+  echo "Missing model file $DEST/$MODEL_FILE" >&2
+  exit 1
+fi
 
 # Refresh compile-time embeds (portable offline default).
+# include_bytes always reads classifier.onnx; copy the published filename there.
 EMBED_DIR="$ROOT/src/shared/classifier"
-cp "$DEST/classifier.onnx" "$EMBED_DIR/classifier.onnx"
+cp "$DEST/$MODEL_FILE" "$EMBED_DIR/classifier.onnx"
 cp "$DEST/manifest.json" "$EMBED_DIR/manifest.json"
 cp "$DEST/normalization_vectors.json" "$EMBED_DIR/normalization_vectors.json"
 
 echo "Classifier model $VERSION ready at $DEST"
-echo "Embedded weights refreshed at $EMBED_DIR/classifier.onnx"
+echo "Embedded weights refreshed at $EMBED_DIR/classifier.onnx (from $MODEL_FILE)"
 echo "Optional override: PROMPT_CHAINMAIL_MODEL_DIR=$DEST"

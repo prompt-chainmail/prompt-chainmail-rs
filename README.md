@@ -19,14 +19,14 @@ The public API is **synchronous** (no Tokio). Method names use idiomatic Rust `s
 ## Features
 
 - **Security** — Composable rivet system (dedicated security plugins) for layered defenses
-- **Offline Classifier** — Portable ONNX classifier (no network calls, no API keys) backs `role_confusion()`, `instruction_hijacking()`, and `tool_use_hijacking()`
+- **Offline Classifier** — Portable ONNX classifier (no network calls, no API keys) backs `role_confusion()`, `instruction_hijacking()`, `tool_use_hijacking()`, and `side_channel()`
 - **Minimal Dependencies** — `whatlang` for language detection and `ort` for local model inference; no cloud embedding APIs
 - **Rust** — Strong typing, feature-gated optional deps, sync `protect` / `protect_bytes`
 - **Compliance Ready** — Flags, confidence, and metadata suitable for audit logging
 - **Monitoring Integration** — Telemetry rivet with a console provider and a `TelemetryProvider` trait for custom backends
 - **Parallel by default** — Concurrent chunk pipelines and ORT session pool on large inputs (`parallel` feature; disable with `default-features = false`)
 
-> **⚠️ Development-quality classifier artifact.** The ONNX classifier (pin `2026.08.09` from [`prompt-chainmail-models`](https://github.com/prompt-chainmail/prompt-chainmail-models); `"release_quality": false`) clears the production **macro_f1 ≥ 0.74** gate (measured **≈ 0.753**) and reaches **attack recall ≈ 0.92** / attack F1 **≈ 0.96** / **macro_recall ≈ 0.72**, with benign false-positive rate ≈ **1.0%** (measured **1.02%**, just over the ≤ 1% release gate). It still fails other release gates (notably macro_recall ≥ 0.90 and per-language recall for several langs). It is included so the classifier-backed rivets are functional end-to-end, but must **not** be treated as fully production-ready until a release-quality artifact (`release_quality: true`) is published.
+> The bundled ONNX classifier (pin `2026.09.08` from [`prompt-chainmail-models`](https://github.com/prompt-chainmail/prompt-chainmail-models); `release_quality: false`) is a 12-head development artifact: macro_f1 ≈ 0.763, macro_recall ≈ 0.767, attack F1 ≈ 0.946, benign false-positive rate ≈ 1.3%. A few release gates are still open (macro_recall is under 0.90; benign FPR is just over 1%; some language-recall gates). It is included so the classifier-backed rivets, including `side_channel()`, work end-to-end. Treat scores as directional until a `release_quality: true` artifact is published.
 
 ## Quick Start
 
@@ -70,13 +70,14 @@ PromptChainmail::new()
     .forge(Rivets::delimiter_confusion())
     .forge(Rivets::instruction_hijacking(None, None, None))
     .forge(Rivets::tool_use_hijacking(None, None, None))
+    .forge(Rivets::side_channel(None, None, None))
     .forge(Rivets::code_injection())
     .forge(Rivets::sql_injection())
     .forge(Rivets::template_injection())
     .forge(Rivets::encoding_detection())
     .forge(Rivets::structure_analysis())
     .forge(Rivets::confidence_filter(0.6, None))
-    .forge(Rivets::rate_limit(None, None, None, None));
+    .forge(Rivets::rate_limit_filter(None, None, None, None));
 ```
 
 #### Development security preset
@@ -99,13 +100,14 @@ PromptChainmail::new()
     .forge(Rivets::delimiter_confusion())
     .forge(Rivets::instruction_hijacking(None, None, None))
     .forge(Rivets::tool_use_hijacking(None, None, None))
+    .forge(Rivets::side_channel(None, None, None))
     .forge(Rivets::code_injection())
     .forge(Rivets::sql_injection())
     .forge(Rivets::template_injection())
     .forge(Rivets::encoding_detection())
     .forge(Rivets::structure_analysis())
     .forge(Rivets::confidence_filter(0.8, None))
-    .forge(Rivets::rate_limit(Some(50), Some(60_000), None, None));
+    .forge(Rivets::rate_limit_filter(Some(50), Some(60_000), None, None));
 ```
 
 ```rust
@@ -225,35 +227,41 @@ let chainmail = PromptChainmail::new()
 
 ### Built-in security rivets
 
-- `Rivets::sanitize()` — HTML removal, whitespace normalization
-- `Rivets::pattern_detection()` — Common injection patterns
-- `Rivets::role_confusion()` — Role manipulation detection (classifier-backed, see below)
-- `Rivets::encoding_detection()` — Base64/hex/binary/octal/ROT13/URL encoding detection
-- `Rivets::structure_analysis()` — Input structure anomaly detection
-- `Rivets::code_injection()` — Code execution attempts
-- `Rivets::sql_injection()` — SQL injection patterns
-- `Rivets::delimiter_confusion()` — Context-breaking attempts
-- `Rivets::instruction_hijacking()` — Instruction override detection (classifier-backed)
-- `Rivets::tool_use_hijacking()` — Indirect tool-use / agent-tool abuse detection (classifier-backed)
-- `Rivets::language_detection()` — Language detection (`whatlang`)
-- `Rivets::template_injection()` — Template syntax injection detection
-- `Rivets::confidence_filter()` — Block low-confidence input
-- `Rivets::rate_limit()` — Request rate limiting
-- `Rivets::untrusted_wrapper()` — Wrap content in security boundary tags
-- `Rivets::http_fetch()` — External HTTP calls via blocking `ureq` (Cargo feature `http`)
-- `Rivets::condition()` — Custom logic with predicates
-- `Rivets::logger()` — Request logging and debugging
-- `Rivets::telemetry()` — Monitoring integration
+Detectors add flags and subtract leftover trust. They do not set `blocked`. `context.blocked` is set only by a forged filter: `confidence_filter` (trust gate) or `rate_limit_filter` (quota).
+
+| Rivet | Role | Blocks |
+| --- | --- | --- |
+| `Rivets::sanitize()` | HTML removal, whitespace normalization | no |
+| `Rivets::pattern_detection()` | Common injection patterns | no |
+| `Rivets::role_confusion()` | Role manipulation detection (classifier-backed, see below) | no |
+| `Rivets::encoding_detection()` | Base64/hex/binary/octal/ROT13/URL encoding detection | no |
+| `Rivets::structure_analysis()` | Input structure anomaly detection | no |
+| `Rivets::code_injection()` | Code execution attempts | no |
+| `Rivets::sql_injection()` | SQL injection patterns | no |
+| `Rivets::delimiter_confusion()` | Context-breaking attempts | no |
+| `Rivets::instruction_hijacking()` | Instruction override detection (classifier-backed) | no |
+| `Rivets::tool_use_hijacking()` | Indirect tool-use / agent-tool abuse detection (classifier-backed) | no |
+| `Rivets::side_channel()` | Unofficial side-channel use (classifier-backed) | no |
+| `Rivets::language_detection()` | Language detection (`whatlang`) | no |
+| `Rivets::template_injection()` | Template syntax injection detection | no |
+| `Rivets::confidence_filter()` | Trust gate on leftover confidence (`<` min) | yes |
+| `Rivets::rate_limit_filter()` | Quota filter | yes |
+| `Rivets::untrusted_wrapper()` | Wrap content in security boundary tags | no |
+| `Rivets::http_fetch()` | External HTTP calls via blocking `ureq` (Cargo feature `http`) | no |
+| `Rivets::condition()` | Custom logic with predicates | no |
+| `Rivets::logger()` | Request logging and debugging | no |
+| `Rivets::telemetry()` | Monitoring integration | no |
 
 #### Classifier-backed rivets
 
-`Rivets::role_confusion()`, `Rivets::instruction_hijacking()`, and `Rivets::tool_use_hijacking()` run text through a shared ONNX classifier (`src/shared/classifier`) instead of cloud embeddings:
+`Rivets::role_confusion()`, `Rivets::instruction_hijacking()`, `Rivets::tool_use_hijacking()`, and `Rivets::side_channel()` run text through a shared ONNX classifier (`src/shared/classifier`) instead of cloud embeddings:
 
 - The model runs fully offline via `ort` from **embedded** `classifier.onnx` (no network, no sibling repo). Checksum/size are verified against the embedded manifest. Pin is `classifier-model-version.json` → [`prompt-chainmail-models`](https://github.com/prompt-chainmail/prompt-chainmail-models).
 - Long inputs are split into byte windows; per-label probabilities are max-aggregated across windows before thresholding.
-- All three rivets accept classifier-relevant options (confidence threshold, language filters). There is no embedding/similarity API.
+- All four rivets accept classifier-relevant options (confidence threshold, language filters). There is no embedding/similarity API.
 - `Rivets::tool_use_hijacking()` targets indirect tool abuse rather than classic instruction-override phrasing.
-- See the warning above: the artifact is `release_quality: false`. Treat output as directional until a release-quality pin ships.
+- `Rivets::side_channel()` targets unofficial out-of-band paths (wiki/paste/signal pages used as a peer board or durable memory).
+- The artifact is `release_quality: false` (see the note above). Treat scores as directional until a release-quality pin ships.
 
 **Maintainers / contributors only:** bump `classifier-model-version.json`, run `make fetch-classifier` to refresh embeds. Optional runtime override: `PROMPT_CHAINMAIL_MODEL_DIR`. Consumers never need these.
 
@@ -326,10 +334,13 @@ Prompt Chainmail uses standardized security flag **strings** (same values as the
 | `injection_pattern` | Common prompt injection patterns | `pattern_detection` |
 | `excessive_lines` / `non_ascii_heavy` / `repetitive_content` | Structure anomalies | `structure_analysis` |
 | `base64_encoding`, `hex_encoding`, `url_encoding`, … | Encoding obfuscation | `encoding_detection` |
-| `rate_limited` | Rate limit exceeded | `rate_limit` |
+| `rate_limited` | Rate limit exceeded | `rate_limit_filter` |
 | `http_*` | HTTP validation / errors | `http_fetch` |
 | `sql_injection` / `code_injection` / `template_injection` / `delimiter_confusion` | Injection families | matching rivets |
 | `tool_use_hijacking` | Indirect tool abuse | `tool_use_hijacking` |
+| `side_channel` | Unofficial side-channel use detected | `side_channel` |
+| `side_channel_coordination` | Peer coordination over a side channel | `side_channel` |
+| `side_channel_state_write` | Durable shared-state write over a side channel | `side_channel` |
 | `role_confusion` (+ subtypes) | Role manipulation | `role_confusion` |
 | `instruction_hijacking` (+ subtypes) | Instruction override | `instruction_hijacking` |
 | `classifier_unavailable` | Classifier failed open | classifier-backed rivets |
