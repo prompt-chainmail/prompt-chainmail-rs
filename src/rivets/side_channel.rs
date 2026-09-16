@@ -1,4 +1,4 @@
-//! Instruction-hijacking family rivet (ONNX classifier-backed).
+//! Side-channel family rivet (ONNX classifier-backed).
 
 use std::sync::Arc;
 
@@ -17,7 +17,7 @@ use crate::types::{ChainmailContext, ChainmailResult};
 
 const DEFAULT_LANGUAGE: &str = "eng";
 
-struct InstructionHijackingRivet {
+struct SideChannelRivet {
     classifier: Arc<CombinedClassifier>,
     languages_limit: usize,
     languages_detection_threshold: f64,
@@ -25,9 +25,9 @@ struct InstructionHijackingRivet {
     language_detector: LanguageDetector,
 }
 
-impl Rivet for InstructionHijackingRivet {
+impl Rivet for SideChannelRivet {
     fn name(&self) -> &'static str {
-        "instruction_hijacking"
+        "side_channel"
     }
 
     fn process(
@@ -62,7 +62,7 @@ impl Rivet for InstructionHijackingRivet {
         let result = self.classifier.classify_family(
             &context.sanitized,
             &primary_language,
-            ClassifierFamily::InstructionHijacking,
+            ClassifierFamily::SideChannel,
             ClassifyFamilyOptions {
                 confidence_threshold: self.confidence_threshold,
             },
@@ -76,59 +76,22 @@ impl Rivet for InstructionHijackingRivet {
         if is_attack {
             context
                 .flags
-                .insert(security_flags::INSTRUCTION_HIJACKING.to_string());
+                .insert(security_flags::SIDE_CHANNEL.to_string());
 
             for attack_type in attack_types {
                 match attack_type.as_str() {
-                    "instruction_override" => {
+                    "side_channel_coordination" => {
                         context
                             .flags
-                            .insert(security_flags::INSTRUCTION_HIJACKING_OVERRIDE.to_string());
+                            .insert(security_flags::SIDE_CHANNEL_COORDINATION.to_string());
                     }
-                    "instruction_forgetting" => {
+                    "side_channel_state_write" => {
                         context
                             .flags
-                            .insert(security_flags::INSTRUCTION_HIJACKING_IGNORE.to_string());
+                            .insert(security_flags::SIDE_CHANNEL_STATE_WRITE.to_string());
                     }
-                    "reset_system" => {
-                        context
-                            .flags
-                            .insert(security_flags::INSTRUCTION_HIJACKING_RESET.to_string());
-                    }
-                    "bypass_security" => {
-                        context
-                            .flags
-                            .insert(security_flags::INSTRUCTION_HIJACKING_BYPASS.to_string());
-                    }
-                    "information_extraction" => {
-                        context
-                            .flags
-                            .insert(security_flags::INSTRUCTION_HIJACKING_REVEAL.to_string());
-                    }
-                    _ => {
-                        context
-                            .flags
-                            .insert(security_flags::INSTRUCTION_HIJACKING_UNKNOWN.to_string());
-                    }
+                    _ => {}
                 }
-            }
-
-            if languages.len() > 1 {
-                context
-                    .flags
-                    .insert(security_flags::INSTRUCTION_HIJACKING_MULTILINGUAL_ATTACK.to_string());
-            }
-
-            if has_script_mixing {
-                context
-                    .flags
-                    .insert(security_flags::INSTRUCTION_HIJACKING_SCRIPT_MIXING.to_string());
-            }
-
-            if has_lookalikes {
-                context
-                    .flags
-                    .insert(security_flags::INSTRUCTION_HIJACKING_LOOKALIKES.to_string());
             }
 
             if max_confidence >= 0.4 {
@@ -144,41 +107,38 @@ impl Rivet for InstructionHijackingRivet {
 
             context
                 .metadata
-                .insert("instruction_hijacking_detected".to_string(), json!(true));
-            context.metadata.insert(
-                "instruction_hijacking_attack_types".to_string(),
-                json!(attack_types),
-            );
+                .insert("side_channel_detected".to_string(), json!(true));
+            context
+                .metadata
+                .insert("side_channel_attack_types".to_string(), json!(attack_types));
         } else {
             context
                 .metadata
-                .insert("instruction_hijacking_detected".to_string(), json!(false));
+                .insert("side_channel_detected".to_string(), json!(false));
             context
                 .metadata
-                .insert("instruction_hijacking_attack_types".to_string(), json!([]));
+                .insert("side_channel_attack_types".to_string(), json!([]));
         }
 
+        context
+            .metadata
+            .insert("side_channel_confidence".to_string(), json!(max_confidence));
+        context
+            .metadata
+            .insert("side_channel_risk_score".to_string(), json!(max_risk_score));
         context.metadata.insert(
-            "instruction_hijacking_confidence".to_string(),
-            json!(max_confidence),
-        );
-        context.metadata.insert(
-            "instruction_hijacking_risk_score".to_string(),
-            json!(max_risk_score),
-        );
-        context.metadata.insert(
-            "instruction_hijacking_detected_language".to_string(),
+            "side_channel_detected_language".to_string(),
             json!(primary_language),
         );
         context.metadata.insert(
-            "instruction_hijacking_detected_languages".to_string(),
+            "side_channel_detected_languages".to_string(),
             json!(top_languages
                 .iter()
                 .map(|(iso3, _)| iso3.clone())
                 .collect::<Vec<_>>()),
         );
         context.metadata.insert(
-            "instruction_hijacking_matches".to_string(),
+            "side_channel_matches".to_string(),
             json!(result.matches.unwrap_or_default()),
         );
         context
@@ -193,7 +153,7 @@ impl Rivet for InstructionHijackingRivet {
                 .flags
                 .insert(security_flags::CLASSIFIER_UNAVAILABLE.to_string());
             context.metadata.insert(
-                "instruction_hijacking_detector_error".to_string(),
+                "side_channel_detector_error".to_string(),
                 json!(detector_error),
             );
         }
@@ -202,12 +162,12 @@ impl Rivet for InstructionHijackingRivet {
     }
 }
 
-pub fn instruction_hijacking(
+pub fn side_channel(
     languages_limit: Option<usize>,
     languages_detection_threshold: Option<f64>,
     confidence_threshold: Option<f64>,
 ) -> Arc<dyn Rivet> {
-    Arc::new(InstructionHijackingRivet {
+    Arc::new(SideChannelRivet {
         classifier: get_combined_classifier(),
         languages_limit: languages_limit.unwrap_or(3),
         languages_detection_threshold: languages_detection_threshold.unwrap_or(0.1),

@@ -17,13 +17,13 @@ pub use rivets::{
     apply_threat_penalty, code_injection, condition, confidence_filter, create_console_provider,
     delimiter_confusion, encoding_detection, get_log_level_from_confidence,
     get_threat_level_from_confidence_score, http_fetch, language_detection, logger,
-    pattern_detection, rate_limit, sanitize, security_flags, sql_injection, structure_analysis,
-    telemetry, template_injection, untrusted_wrapper, ConsoleTelemetryProvider, HttpFetchOptions,
-    LogLevel, Rivet, Rivets, TelemetryData, TelemetryEvent, TelemetryEventType, TelemetryLogLevel,
-    TelemetryOptions, TelemetryProvider, ThreatLevel, HTTP_FETCH_PRIVATE_RANGES,
+    pattern_detection, rate_limit_filter, sanitize, security_flags, sql_injection,
+    structure_analysis, telemetry, template_injection, untrusted_wrapper, ConsoleTelemetryProvider,
+    HttpFetchOptions, LogLevel, Rivet, Rivets, TelemetryData, TelemetryEvent, TelemetryEventType,
+    TelemetryLogLevel, TelemetryOptions, TelemetryProvider, ThreatLevel, HTTP_FETCH_PRIVATE_RANGES,
 };
 #[cfg(feature = "classifier")]
-pub use rivets::{instruction_hijacking, role_confusion, tool_use_hijacking};
+pub use rivets::{instruction_hijacking, role_confusion, side_channel, tool_use_hijacking};
 #[cfg(feature = "classifier")]
 pub use shared::classifier;
 pub use shared::{
@@ -101,12 +101,7 @@ impl PromptChainmail {
         self.protect(decoded.as_ref())
     }
 
-    fn protect_string(
-        &self,
-        input: &str,
-        start_time: u128,
-        session_id: String,
-    ) -> ChainmailResult {
+    fn protect_string(&self, input: &str, start_time: u128, session_id: String) -> ChainmailResult {
         let mut context = ChainmailContext {
             input: input.to_string(),
             sanitized: input.to_string(),
@@ -164,13 +159,13 @@ impl PromptChainmail {
 
         #[cfg(feature = "parallel")]
         {
-            return self.protect_chunked_parallel(
+            self.protect_chunked_parallel(
                 &chunks,
                 chunk_count,
                 total_length,
                 start_time,
                 session_id,
-            );
+            )
         }
 
         #[cfg(not(feature = "parallel"))]
@@ -324,9 +319,8 @@ impl PromptChainmail {
             let rivet = Arc::clone(&rivets[*index]);
             *index += 1;
 
-            let mut next = |ctx: &mut ChainmailContext| {
-                run_from(rivets, index, ctx, start_time, create)
-            };
+            let mut next =
+                |ctx: &mut ChainmailContext| run_from(rivets, index, ctx, start_time, create);
 
             rivet.process(context, &mut next)
         }

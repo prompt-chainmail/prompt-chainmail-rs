@@ -8,9 +8,8 @@ use crate::rivets::utils::apply_threat_penalty;
 use crate::rivets::Rivet;
 use crate::types::{ChainmailContext, ChainmailResult};
 
-static DEFAULT_PATTERNS: LazyLock<Vec<(Regex, &'static str)>> = LazyLock::new(|| {
-    create_pattern_detection_patterns()
-});
+static DEFAULT_PATTERNS: LazyLock<Vec<(Regex, &'static str)>> =
+    LazyLock::new(create_pattern_detection_patterns);
 
 /// Shared injection patterns used by `pattern_detection` and `encoding_detection` (ROT13).
 pub fn create_pattern_detection_patterns() -> Vec<(Regex, &'static str)> {

@@ -45,7 +45,10 @@ impl Rivet for SanitizeRivet {
         sanitized = HTML_ENTITIES.amp.replace_all(&sanitized, "&").into_owned();
         sanitized = HTML_ENTITIES.lt.replace_all(&sanitized, "<").into_owned();
         sanitized = HTML_ENTITIES.gt.replace_all(&sanitized, ">").into_owned();
-        sanitized = HTML_ENTITIES.quot.replace_all(&sanitized, "\"").into_owned();
+        sanitized = HTML_ENTITIES
+            .quot
+            .replace_all(&sanitized, "\"")
+            .into_owned();
         sanitized = HTML_ENTITIES.apos.replace_all(&sanitized, "'").into_owned();
 
         let mut controls_removed = sanitized.clone();

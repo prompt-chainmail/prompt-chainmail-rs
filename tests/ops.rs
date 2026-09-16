@@ -1,4 +1,4 @@
-//! Ops rivets: rate_limit, condition, untrusted_wrapper, logger, telemetry, http_fetch.
+//! Ops rivets: rate_limit_filter, condition, untrusted_wrapper, logger, telemetry, http_fetch.
 
 use std::sync::{Arc, Mutex};
 
@@ -8,8 +8,9 @@ use prompt_chainmail::{
 };
 
 #[test]
-fn rate_limit_eventually_blocks() {
-    let mail = PromptChainmail::new().forge(Rivets::rate_limit(Some(2), Some(60_000), None, None));
+fn rate_limit_filter_eventually_blocks() {
+    let mail =
+        PromptChainmail::new().forge(Rivets::rate_limit_filter(Some(2), Some(60_000), None, None));
 
     let r1 = mail.protect("test 1");
     let r2 = mail.protect("test 2");
@@ -24,9 +25,8 @@ fn rate_limit_eventually_blocks() {
 
 #[test]
 fn condition_predicate_runs_and_skips() {
-    let predicate = Arc::new(|ctx: &prompt_chainmail::ChainmailContext| {
-        ctx.sanitized.contains("secret")
-    });
+    let predicate =
+        Arc::new(|ctx: &prompt_chainmail::ChainmailContext| ctx.sanitized.contains("secret"));
 
     let mail = PromptChainmail::new().forge(Rivets::condition(
         predicate,
@@ -91,10 +91,8 @@ fn telemetry_console_provider_does_not_break() {
 
 #[test]
 fn http_fetch_invalid_url_sets_http_flags_fail_open() {
-    let mail = PromptChainmail::new().forge(Rivets::http_fetch(
-        "not a url",
-        HttpFetchOptions::default(),
-    ));
+    let mail =
+        PromptChainmail::new().forge(Rivets::http_fetch("not a url", HttpFetchOptions::default()));
 
     let result = mail.protect("payload");
     // Fail-open: pipeline continues (success unless something else blocks).

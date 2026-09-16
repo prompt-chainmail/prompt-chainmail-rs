@@ -30,7 +30,9 @@ fn fail(message: impl Into<String>) -> ClassifierManifestError {
     }
 }
 
-pub fn validate_manifest(candidate: &serde_json::Value) -> Result<ClassifierManifest, ClassifierManifestError> {
+pub fn validate_manifest(
+    candidate: &serde_json::Value,
+) -> Result<ClassifierManifest, ClassifierManifestError> {
     let obj = candidate
         .as_object()
         .ok_or_else(|| fail("Classifier manifest must be an object"))?;
@@ -245,9 +247,10 @@ pub fn validate_manifest(candidate: &serde_json::Value) -> Result<ClassifierMani
     }
 
     // Re-parse through serde for the typed struct after structural checks.
-    serde_json::from_value(candidate.clone()).map_err(|e| fail(e.to_string()))
+    serde_json::from_value(candidate.clone())
+        .map_err(|e| fail(e.to_string()))
         .map(|mut m: ClassifierManifest| {
-                    m.artifact_version = artifact_version;
+            m.artifact_version = artifact_version;
             m.model_sha256 = model_sha256;
             m.model_size_bytes = model_size_bytes;
             m.normalization_version = normalization_version.to_string();

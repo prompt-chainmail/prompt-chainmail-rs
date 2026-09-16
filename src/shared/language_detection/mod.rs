@@ -107,7 +107,10 @@ mod tests {
 
     #[test]
     fn normalize_strips_diacritics_and_lowercases() {
-        assert_eq!(normalize_text("café résumé naïve"), normalize_text("cafe resume naive"));
+        assert_eq!(
+            normalize_text("café résumé naïve"),
+            normalize_text("cafe resume naive")
+        );
         assert_eq!(normalize_text("HELLO WORLD"), "hello world");
     }
 

@@ -14,8 +14,10 @@ static ROT13_EXTRA_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
     vec![
         Regex::new(r"(?i)\bignore\b[\s\S]{0,24}\b(system|instructions?|rules?|prompts?)\b")
             .unwrap(),
-        Regex::new(r"(?i)\b(forget|disregard|override|bypass)\b[\s\S]{0,24}\b(all|previous|safety)\b")
-            .unwrap(),
+        Regex::new(
+            r"(?i)\b(forget|disregard|override|bypass)\b[\s\S]{0,24}\b(all|previous|safety)\b",
+        )
+        .unwrap(),
     ]
 });
 
@@ -121,10 +123,7 @@ impl Rivet for EncodingDetectionRivet {
             );
         }
 
-        if ENCODING_PATTERNS
-            .binary
-            .is_match(context.sanitized.trim())
-        {
+        if ENCODING_PATTERNS.binary.is_match(context.sanitized.trim()) {
             let mut binary_string = context.sanitized.clone();
             while COMMON_PATTERNS.whitespace.is_match(&binary_string) {
                 binary_string = COMMON_PATTERNS
@@ -176,10 +175,7 @@ impl Rivet for EncodingDetectionRivet {
         }
 
         let rot13_decoded = rot13(&context.sanitized);
-        let mut suspicious: Vec<&Regex> = injection_patterns()
-            .iter()
-            .map(|(re, _)| re)
-            .collect();
+        let mut suspicious: Vec<&Regex> = injection_patterns().iter().map(|(re, _)| re).collect();
         for p in ROT13_EXTRA_PATTERNS.iter() {
             suspicious.push(p);
         }
@@ -274,7 +270,7 @@ fn decode_base64(input: &str) -> Option<String> {
     }
 
     let bytes = input.as_bytes();
-    if bytes.is_empty() || bytes.len() % 4 != 0 {
+    if bytes.is_empty() || !bytes.len().is_multiple_of(4) {
         // Lenient like Node Buffer.from: non-padded lengths accepted.
     }
 

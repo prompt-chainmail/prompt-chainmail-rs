@@ -44,9 +44,7 @@ impl Default for ClassifierBackend {
 impl ClassifierBackend {
     pub fn new(cache_size: usize) -> Self {
         Self {
-            cache: Mutex::new(
-                BoundedCache::new(cache_size).expect("cache_size must be positive"),
-            ),
+            cache: Mutex::new(BoundedCache::new(cache_size).expect("cache_size must be positive")),
         }
     }
 
@@ -142,9 +140,8 @@ fn parallel_run_windows(
         .par_iter()
         .enumerate()
         .map(|(window_index, window)| {
-            let outcome = pool.with_session(|session| {
-                run_window(session, &window.bytes, window_size_bytes)
-            });
+            let outcome =
+                pool.with_session(|session| run_window(session, &window.bytes, window_size_bytes));
             (window_index, window.start, window.end, outcome)
         })
         .collect()
@@ -226,13 +223,11 @@ fn run_window(
         mask[i] = 1;
     }
 
-    let input_ids = Tensor::from_array(([1usize, window_size_bytes], ids)).map_err(|e| {
-        ClassifierError::new("tensor_create_failed", format!("input_ids: {e}"))
+    let input_ids = Tensor::from_array(([1usize, window_size_bytes], ids))
+        .map_err(|e| ClassifierError::new("tensor_create_failed", format!("input_ids: {e}")))?;
+    let attention_mask = Tensor::from_array(([1usize, window_size_bytes], mask)).map_err(|e| {
+        ClassifierError::new("tensor_create_failed", format!("attention_mask: {e}"))
     })?;
-    let attention_mask =
-        Tensor::from_array(([1usize, window_size_bytes], mask)).map_err(|e| {
-            ClassifierError::new("tensor_create_failed", format!("attention_mask: {e}"))
-        })?;
 
     let outputs = session
         .run(ort::inputs! {

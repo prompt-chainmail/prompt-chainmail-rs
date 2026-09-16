@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use prompt_chainmail::{
-    apply_threat_penalty, security_flags, ThreatLevel, ChainmailContext, PromptChainmail, Rivets,
+    apply_threat_penalty, security_flags, ChainmailContext, PromptChainmail, Rivets, ThreatLevel,
 };
 
 #[test]

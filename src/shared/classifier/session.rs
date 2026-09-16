@@ -175,9 +175,7 @@ impl ClassifierSessionPool {
             std::thread::yield_now();
         };
         let result = {
-            let mut session = self.sessions[idx]
-                .lock()
-                .unwrap_or_else(|e| e.into_inner());
+            let mut session = self.sessions[idx].lock().unwrap_or_else(|e| e.into_inner());
             f(&mut session)
         };
         self.idle
@@ -189,6 +187,10 @@ impl ClassifierSessionPool {
 
     pub fn len(&self) -> usize {
         self.sessions.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.sessions.is_empty()
     }
 }
 

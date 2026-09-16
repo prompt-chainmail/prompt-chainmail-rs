@@ -1,4 +1,4 @@
-use prompt_chainmail::{Chainmails, security_flags};
+use prompt_chainmail::{security_flags, Chainmails};
 
 #[test]
 fn basic_protects_hello_world() {
@@ -36,7 +36,10 @@ fn basic_or_advanced_flags_attack_string() {
     let advanced = Chainmails::advanced(None, None).protect(attack);
 
     let basic_flagged = !basic.context.flags.is_empty()
-        || basic.context.flags.contains(security_flags::INJECTION_PATTERN);
+        || basic
+            .context
+            .flags
+            .contains(security_flags::INJECTION_PATTERN);
     let advanced_flagged = !advanced.context.flags.is_empty();
 
     assert!(

@@ -9,10 +9,12 @@ mod instruction_hijacking;
 mod language_detection;
 mod logger;
 mod pattern_detection;
-mod rate_limit;
+mod rate_limit_filter;
 #[cfg(feature = "classifier")]
 mod role_confusion;
 mod sanitize;
+#[cfg(feature = "classifier")]
+mod side_channel;
 mod sql_injection;
 mod structure_analysis;
 mod telemetry;
@@ -38,10 +40,12 @@ pub use instruction_hijacking::instruction_hijacking;
 pub use language_detection::language_detection;
 pub use logger::{logger, LogLevel};
 pub use pattern_detection::pattern_detection;
-pub use rate_limit::rate_limit;
+pub use rate_limit_filter::rate_limit_filter;
 #[cfg(feature = "classifier")]
 pub use role_confusion::role_confusion;
 pub use sanitize::sanitize;
+#[cfg(feature = "classifier")]
+pub use side_channel::side_channel;
 pub use sql_injection::sql_injection;
 pub use structure_analysis::structure_analysis;
 pub use telemetry::{
@@ -57,6 +61,9 @@ pub use untrusted_wrapper::untrusted_wrapper;
 pub use utils::apply_threat_penalty;
 
 use crate::types::{ChainmailContext, ChainmailResult};
+
+type RateLimitKeyFn = Arc<dyn Fn(&ChainmailContext) -> String + Send + Sync>;
+type LoggerFn = Arc<dyn Fn(&ChainmailContext) + Send + Sync>;
 
 /// A rivet processes context and may call `next` to continue the chain.
 pub trait Rivet: Send + Sync {
@@ -113,19 +120,16 @@ impl Rivets {
         language_detection()
     }
 
-    pub fn rate_limit(
+    pub fn rate_limit_filter(
         max_requests: Option<usize>,
         window_ms: Option<u128>,
-        key_fn: Option<Arc<dyn Fn(&ChainmailContext) -> String + Send + Sync>>,
+        key_fn: Option<RateLimitKeyFn>,
         max_keys: Option<usize>,
     ) -> Arc<dyn Rivet> {
-        rate_limit(max_requests, window_ms, key_fn, max_keys)
+        rate_limit_filter(max_requests, window_ms, key_fn, max_keys)
     }
 
-    pub fn logger(
-        level: Option<LogLevel>,
-        log_fn: Option<Arc<dyn Fn(&ChainmailContext) + Send + Sync>>,
-    ) -> Arc<dyn Rivet> {
+    pub fn logger(level: Option<LogLevel>, log_fn: Option<LoggerFn>) -> Arc<dyn Rivet> {
         logger(level, log_fn)
     }
 
@@ -185,6 +189,19 @@ impl Rivets {
         confidence_threshold: Option<f64>,
     ) -> Arc<dyn Rivet> {
         crate::rivets::tool_use_hijacking::tool_use_hijacking(
+            languages_limit,
+            languages_detection_threshold,
+            confidence_threshold,
+        )
+    }
+
+    #[cfg(feature = "classifier")]
+    pub fn side_channel(
+        languages_limit: Option<usize>,
+        languages_detection_threshold: Option<f64>,
+        confidence_threshold: Option<f64>,
+    ) -> Arc<dyn Rivet> {
+        crate::rivets::side_channel::side_channel(
             languages_limit,
             languages_detection_threshold,
             confidence_threshold,

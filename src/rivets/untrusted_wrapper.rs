@@ -45,7 +45,10 @@ impl Rivet for UntrustedWrapperRivet {
 /// Wraps content in a tag (optionally preserving the original).
 ///
 /// Defaults: `tag_name="UNTRUSTED_CONTENT"`, `preserve_original=false`.
-pub fn untrusted_wrapper(tag_name: Option<&str>, preserve_original: Option<bool>) -> Arc<dyn Rivet> {
+pub fn untrusted_wrapper(
+    tag_name: Option<&str>,
+    preserve_original: Option<bool>,
+) -> Arc<dyn Rivet> {
     Arc::new(UntrustedWrapperRivet {
         tag_name: tag_name.unwrap_or("UNTRUSTED_CONTENT").to_string(),
         preserve_original: preserve_original.unwrap_or(false),

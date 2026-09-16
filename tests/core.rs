@@ -131,9 +131,7 @@ fn set_blocked_latch_cannot_unblock() {
         ctx.set_blocked(false);
     });
 
-    let mail = PromptChainmail::new()
-        .forge(blocking)
-        .forge(attempt_clear);
+    let mail = PromptChainmail::new().forge(blocking).forge(attempt_clear);
     let result = mail.protect("test input");
     assert!(result.context.blocked);
     assert!(!result.success);

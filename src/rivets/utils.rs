@@ -1,5 +1,5 @@
-use crate::types::ChainmailContext;
 use crate::rivets::types::ThreatLevel;
+use crate::types::ChainmailContext;
 
 /// Reduces confidence based on threat level, flag count, and content length.
 pub fn apply_threat_penalty(context: &mut ChainmailContext, level: ThreatLevel) {

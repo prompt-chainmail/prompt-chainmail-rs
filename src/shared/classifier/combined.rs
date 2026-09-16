@@ -63,9 +63,7 @@ impl CombinedClassifier {
             Err(error) => {
                 let detector_error_code = error.code;
                 let mut result = empty_result(language_code);
-                result.details = vec![format!(
-                    "Classifier detection error: {detector_error_code}"
-                )];
+                result.details = vec![format!("Classifier detection error: {detector_error_code}")];
                 result.detector_error = Some(detector_error_code);
                 return result;
             }
@@ -92,10 +90,10 @@ impl CombinedClassifier {
             .confidence_threshold
             .map(|t| confidence >= t)
             .unwrap_or(true);
-        let passes_attack_gate =
-            passes_attack_threshold || family == ClassifierFamily::ToolUseHijacking;
-        let is_attack =
-            passes_attack_gate && !attack_types.is_empty() && passes_confidence_floor;
+        let passes_attack_gate = passes_attack_threshold
+            || family == ClassifierFamily::ToolUseHijacking
+            || family == ClassifierFamily::SideChannel;
+        let is_attack = passes_attack_gate && !attack_types.is_empty() && passes_confidence_floor;
 
         let risk_score = if is_attack {
             calculate_language_code_risk_score(
@@ -120,11 +118,7 @@ impl CombinedClassifier {
 
         SemanticDetectionResult {
             is_attack,
-            attack_types: if is_attack {
-                attack_types
-            } else {
-                Vec::new()
-            },
+            attack_types: if is_attack { attack_types } else { Vec::new() },
             confidence,
             risk_score,
             detected_language: if language_group.is_empty() {
@@ -169,4 +163,3 @@ pub fn reset_combined_classifier_for_tests() {
     let mut guard = shared_slot().lock().unwrap_or_else(|e| e.into_inner());
     *guard = None;
 }
-
