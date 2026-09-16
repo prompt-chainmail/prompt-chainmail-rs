@@ -108,10 +108,9 @@ impl Rivet for SideChannelRivet {
             context
                 .metadata
                 .insert("side_channel_detected".to_string(), json!(true));
-            context.metadata.insert(
-                "side_channel_attack_types".to_string(),
-                json!(attack_types),
-            );
+            context
+                .metadata
+                .insert("side_channel_attack_types".to_string(), json!(attack_types));
         } else {
             context
                 .metadata
@@ -121,14 +120,12 @@ impl Rivet for SideChannelRivet {
                 .insert("side_channel_attack_types".to_string(), json!([]));
         }
 
-        context.metadata.insert(
-            "side_channel_confidence".to_string(),
-            json!(max_confidence),
-        );
-        context.metadata.insert(
-            "side_channel_risk_score".to_string(),
-            json!(max_risk_score),
-        );
+        context
+            .metadata
+            .insert("side_channel_confidence".to_string(), json!(max_confidence));
+        context
+            .metadata
+            .insert("side_channel_risk_score".to_string(), json!(max_risk_score));
         context.metadata.insert(
             "side_channel_detected_language".to_string(),
             json!(primary_language),

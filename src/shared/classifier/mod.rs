@@ -18,8 +18,8 @@ pub use backend::ClassifierBackend;
 pub use cache::BoundedCache;
 pub use checksum::sha256_hex;
 pub use combined::{
-    get_combined_classifier, reset_combined_classifier_for_tests, set_combined_classifier_for_tests,
-    CombinedClassifier,
+    get_combined_classifier, reset_combined_classifier_for_tests,
+    set_combined_classifier_for_tests, CombinedClassifier,
 };
 pub use labels::{
     labels_for_family, ClassifierFamily, CLASSIFIER_LABELS, INSTRUCTION_HIJACKING_LABELS,
@@ -39,6 +39,6 @@ pub use session::{
 #[cfg(feature = "parallel")]
 pub use session::{get_classifier_session_pool, ClassifierSessionPool};
 pub use types::{
-    ClassifierClassification, ClassifierDetectionConfig, ClassifierMatch, ClassifierManifest,
+    ClassifierClassification, ClassifierDetectionConfig, ClassifierManifest, ClassifierMatch,
     ClassifyFamilyOptions, RiskCalculationConfig, SemanticDetectionResult,
 };

@@ -17,10 +17,7 @@ pub const ROLE_CONFUSION_LABELS: &[&str] = &[
 
 pub const TOOL_USE_HIJACKING_LABELS: &[&str] = &["tool_use_hijacking"];
 
-pub const SIDE_CHANNEL_LABELS: &[&str] = &[
-    "side_channel_coordination",
-    "side_channel_state_write",
-];
+pub const SIDE_CHANNEL_LABELS: &[&str] = &["side_channel_coordination", "side_channel_state_write"];
 
 /// Full label order matching `manifest.json` and the subtype output tensor.
 pub const CLASSIFIER_LABELS: &[&str] = &[

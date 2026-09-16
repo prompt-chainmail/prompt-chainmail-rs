@@ -254,10 +254,7 @@ impl Rivet for TelemetryRivet {
                     TelemetryEventType::SecurityScan
                 };
                 let flags: Vec<String> = context.flags.iter().cloned().collect();
-                let risk_score = context
-                    .metadata
-                    .get("risk_score")
-                    .and_then(|v| v.as_f64());
+                let risk_score = context.metadata.get("risk_score").and_then(|v| v.as_f64());
                 let attack_types = context.metadata.get("attack_types").and_then(|v| {
                     v.as_array().map(|arr| {
                         arr.iter()
@@ -311,9 +308,7 @@ fn now_ms() -> u128 {
 
 /// Breadcrumb (if provider set), then `next`, then metrics/security events.
 pub fn telemetry(options: TelemetryOptions) -> Arc<dyn Rivet> {
-    let log_fn = options
-        .log_fn
-        .unwrap_or_else(|| Arc::new(default_log_fn));
+    let log_fn = options.log_fn.unwrap_or_else(|| Arc::new(default_log_fn));
     Arc::new(TelemetryRivet {
         log_fn,
         track_metrics: options.track_metrics.unwrap_or(true),

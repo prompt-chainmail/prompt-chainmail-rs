@@ -114,9 +114,9 @@ impl Rivet for InstructionHijackingRivet {
             }
 
             if languages.len() > 1 {
-                context.flags.insert(
-                    security_flags::INSTRUCTION_HIJACKING_MULTILINGUAL_ATTACK.to_string(),
-                );
+                context
+                    .flags
+                    .insert(security_flags::INSTRUCTION_HIJACKING_MULTILINGUAL_ATTACK.to_string());
             }
 
             if has_script_mixing {
@@ -153,10 +153,9 @@ impl Rivet for InstructionHijackingRivet {
             context
                 .metadata
                 .insert("instruction_hijacking_detected".to_string(), json!(false));
-            context.metadata.insert(
-                "instruction_hijacking_attack_types".to_string(),
-                json!([]),
-            );
+            context
+                .metadata
+                .insert("instruction_hijacking_attack_types".to_string(), json!([]));
         }
 
         context.metadata.insert(

@@ -13,14 +13,14 @@ mod rate_limit_filter;
 #[cfg(feature = "classifier")]
 mod role_confusion;
 mod sanitize;
+#[cfg(feature = "classifier")]
+mod side_channel;
 mod sql_injection;
 mod structure_analysis;
 mod telemetry;
 mod template_injection;
 #[cfg(feature = "classifier")]
 mod tool_use_hijacking;
-#[cfg(feature = "classifier")]
-mod side_channel;
 mod types;
 mod untrusted_wrapper;
 mod utils;
@@ -44,6 +44,8 @@ pub use rate_limit_filter::rate_limit_filter;
 #[cfg(feature = "classifier")]
 pub use role_confusion::role_confusion;
 pub use sanitize::sanitize;
+#[cfg(feature = "classifier")]
+pub use side_channel::side_channel;
 pub use sql_injection::sql_injection;
 pub use structure_analysis::structure_analysis;
 pub use telemetry::{
@@ -54,13 +56,14 @@ pub use telemetry::{
 pub use template_injection::template_injection;
 #[cfg(feature = "classifier")]
 pub use tool_use_hijacking::tool_use_hijacking;
-#[cfg(feature = "classifier")]
-pub use side_channel::side_channel;
 pub use types::{security_flags, ThreatLevel};
 pub use untrusted_wrapper::untrusted_wrapper;
 pub use utils::apply_threat_penalty;
 
 use crate::types::{ChainmailContext, ChainmailResult};
+
+type RateLimitKeyFn = Arc<dyn Fn(&ChainmailContext) -> String + Send + Sync>;
+type LoggerFn = Arc<dyn Fn(&ChainmailContext) + Send + Sync>;
 
 /// A rivet processes context and may call `next` to continue the chain.
 pub trait Rivet: Send + Sync {
@@ -120,16 +123,13 @@ impl Rivets {
     pub fn rate_limit_filter(
         max_requests: Option<usize>,
         window_ms: Option<u128>,
-        key_fn: Option<Arc<dyn Fn(&ChainmailContext) -> String + Send + Sync>>,
+        key_fn: Option<RateLimitKeyFn>,
         max_keys: Option<usize>,
     ) -> Arc<dyn Rivet> {
         rate_limit_filter(max_requests, window_ms, key_fn, max_keys)
     }
 
-    pub fn logger(
-        level: Option<LogLevel>,
-        log_fn: Option<Arc<dyn Fn(&ChainmailContext) + Send + Sync>>,
-    ) -> Arc<dyn Rivet> {
+    pub fn logger(level: Option<LogLevel>, log_fn: Option<LoggerFn>) -> Arc<dyn Rivet> {
         logger(level, log_fn)
     }
 

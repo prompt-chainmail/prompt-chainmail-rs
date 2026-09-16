@@ -69,6 +69,11 @@ impl Chainmails {
             .forge(Rivets::encoding_detection())
             .forge(Rivets::structure_analysis())
             .forge(Rivets::confidence_filter(confidence_filter, None))
-            .forge(Rivets::rate_limit_filter(Some(50), Some(60_000), None, None))
+            .forge(Rivets::rate_limit_filter(
+                Some(50),
+                Some(60_000),
+                None,
+                None,
+            ))
     }
 }

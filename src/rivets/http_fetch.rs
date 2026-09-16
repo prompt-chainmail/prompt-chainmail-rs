@@ -85,7 +85,7 @@ impl Rivet for HttpFetchRivet {
                 "http_error".to_string(),
                 Value::String("http feature disabled".to_string()),
             );
-            return next(context);
+            next(context)
         }
 
         #[cfg(feature = "http")]
@@ -241,9 +241,9 @@ mod fetch_impl {
                         Ok(data) => {
                             if let Some(validate) = &self.validate_response {
                                 if !validate(status.as_u16(), &data) {
-                                    context.flags.insert(
-                                        security_flags::HTTP_VALIDATION_FAILED.to_string(),
-                                    );
+                                    context
+                                        .flags
+                                        .insert(security_flags::HTTP_VALIDATION_FAILED.to_string());
                                     apply_threat_penalty(context, ThreatLevel::High);
                                     context.metadata.insert(
                                         "http_validation_error".to_string(),
@@ -287,10 +287,7 @@ mod fetch_impl {
                         apply_threat_penalty(context, ThreatLevel::Medium);
                         context.metadata.insert(
                             "http_error".to_string(),
-                            Value::String(format!(
-                                "Request timed out after {}ms",
-                                self.timeout_ms
-                            )),
+                            Value::String(format!("Request timed out after {}ms", self.timeout_ms)),
                         );
                     } else {
                         context.flags.insert(security_flags::HTTP_ERROR.to_string());
@@ -308,9 +305,7 @@ mod fetch_impl {
     }
 
     fn parse_url_scheme_host(url: &str) -> Result<(String, String), String> {
-        let uri: ureq::http::Uri = url
-            .parse()
-            .map_err(|_| "Invalid URL format".to_string())?;
+        let uri: ureq::http::Uri = url.parse().map_err(|_| "Invalid URL format".to_string())?;
         let scheme = uri
             .scheme_str()
             .ok_or_else(|| "Invalid URL format".to_string())?

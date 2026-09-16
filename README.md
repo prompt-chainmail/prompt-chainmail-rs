@@ -8,10 +8,14 @@
 
 **Security middleware for AI prompt protection**
 
-Rust port of [`prompt-chainmail-ts`](https://github.com/prompt-chainmail/prompt-chainmail-ts). Security middleware that shields AI applications from prompt injection, jailbreaking, role confusion, tool hijacking attempts and obfuscated attacks through composable defense layers.
+Security middleware that shields AI applications from prompt injection, jailbreaking, role confusion, tool hijacking attempts and obfuscated attacks through composable defense layers.
 
+Also available in TypeScript ([`prompt-chainmail-ts`](https://github.com/prompt-chainmail/prompt-chainmail-ts)) and Python ([`prompt-chainmail-py`](https://github.com/prompt-chainmail/prompt-chainmail-py)).
+
+[![CI/CD Pipeline](https://github.com/prompt-chainmail/prompt-chainmail-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/prompt-chainmail/prompt-chainmail-rs/actions/workflows/ci.yml)
 [![License: BUSL-1.1](https://img.shields.io/badge/license-BUSL--1.1-blue.svg)](LICENSE.md)
 [![Rust](https://img.shields.io/badge/rust-2021-orange.svg)](https://www.rust-lang.org/)
+[![Security Audit](https://img.shields.io/badge/security-audited-green.svg)](https://github.com/prompt-chainmail/prompt-chainmail-rs/actions/workflows/security.yml)
 [![Beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/prompt-chainmail/prompt-chainmail-rs)
 
 The public API is **synchronous** (no Tokio). Method names use idiomatic Rust `snake_case`; preset composition and flag strings match the TypeScript package.
@@ -264,6 +268,8 @@ Detectors add flags and subtract leftover trust. They do not set `blocked`. `con
 - The artifact is `release_quality: false` (see the note above). Treat scores as directional until a release-quality pin ships.
 
 **Maintainers / contributors only:** bump `classifier-model-version.json`, run `make fetch-classifier` to refresh embeds. Optional runtime override: `PROMPT_CHAINMAIL_MODEL_DIR`. Consumers never need these.
+
+Local checks: `make format`, `make lint`, `make test`, `make audit` (`cargo-audit` required for the last). GitHub Actions runs the same on `main` / `master`.
 
 ## Cargo Features
 

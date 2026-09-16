@@ -22,7 +22,10 @@ fn delimiter_confusion_detects_known_bad() {
 fn code_injection_detects_known_bad() {
     let mail = PromptChainmail::new().forge(Rivets::code_injection());
     let result = mail.protect("eval('malicious code')");
-    assert!(result.context.flags.contains(security_flags::CODE_INJECTION));
+    assert!(result
+        .context
+        .flags
+        .contains(security_flags::CODE_INJECTION));
 }
 
 #[test]
