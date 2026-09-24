@@ -92,7 +92,7 @@ impl CombinedClassifier {
             .unwrap_or(true);
         let passes_attack_gate = passes_attack_threshold
             || family == ClassifierFamily::ToolUseHijacking
-            || family == ClassifierFamily::SideChannel;
+            || (family == ClassifierFamily::SideChannel && confidence > 0.0);
         let is_attack = passes_attack_gate && !attack_types.is_empty() && passes_confidence_floor;
 
         let risk_score = if is_attack {
