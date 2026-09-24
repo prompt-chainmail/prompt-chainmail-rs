@@ -144,8 +144,8 @@ fn pricing_question_about_an_image_does_not_set_side_channel_flags() {
 #[test]
 fn public_pricing_lookup_does_not_set_side_channel_flags() {
     let mail = PromptChainmail::new().forge(Rivets::side_channel(None, None, None));
-    let result = mail
-        .protect("https://example.com/pricing\nfind the price or just the number or estimate");
+    let result =
+        mail.protect("https://example.com/pricing\nfind the price or just the number or estimate");
     assert!(
         !result
             .context
