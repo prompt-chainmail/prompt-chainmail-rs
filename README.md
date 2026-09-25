@@ -30,7 +30,7 @@ The public API is **synchronous** (no Tokio). Method names use idiomatic Rust `s
 - **Monitoring Integration** — Telemetry rivet with a console provider and a `TelemetryProvider` trait for custom backends
 - **Parallel by default** — Concurrent chunk pipelines and ORT session pool on large inputs (`parallel` feature; disable with `default-features = false`)
 
-> The bundled ONNX classifier (pin `2026.09.23` from [`prompt-chainmail-models`](https://github.com/prompt-chainmail/prompt-chainmail-models); `release_quality: false`) is a 12-head model: macro_f1 ≈ 0.879, macro_recall ≈ 0.908, attack F1 ≈ 0.977, benign false-positive rate ≈ 1.4%. Language recall is at or above 0.80. The benign false-positive gate is still open.
+> The bundled ONNX classifier (pin `2026.09.25` from [`prompt-chainmail-models`](https://github.com/prompt-chainmail/prompt-chainmail-models); `release_quality: false`) is a 12-head model: macro_f1 ≈ 0.853, macro_recall ≈ 0.909, attack F1 ≈ 0.979, benign false-positive rate ≈ 1.25%. Language recall is at or above 0.80. The benign false-positive gate is still open.
 
 ## Quick Start
 
